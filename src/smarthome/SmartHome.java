@@ -16,7 +16,7 @@ public class SmartHome {
      */
     public static void main(String[] args) {
         // TODO code application logic here
-        String[] options ={"Smart Light", "Thermostat", "Security Camera", "Smart Speaker", "Smart Lock", "Secuirt Floodlight"};
+        String[] options ={"Smart Light", "Thermostat", "Security Camera", "Smart Speaker", "Smart Lock", "Security Floodlight"};
         int choice;
         
         SecurityCamera Camera = new SecurityCamera();
@@ -35,6 +35,20 @@ public class SmartHome {
                 break;
             case 1:
                 Thermo.changeTemp();
+                break;
+            case 2:
+                break;
+            case 3:
+                break;
+            case 4:
+                if(Lock.lockState){
+                Lock.deviceUnlock();
+                }else{
+                Lock.deviceLock();
+            }
+                break;
+            case 5:
+                Floodlight.adjustLight();
                 break;
          }
         }while(choice != -1);
