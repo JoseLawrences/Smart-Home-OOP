@@ -39,6 +39,7 @@ public class SmartHome {
             case 2:
                 break;
             case 3:
+                Speaker.controlSpeaker();
                 break;
             case 4:
                 if(Lock.lockState){
