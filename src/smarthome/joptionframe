@@ -1,0 +1,276 @@
+```java
+import javax.swing.JOptionPane;
+import java.util.ArrayList;
+
+// The Abstract Base - This ensures the Hub can treat all devices the same way.
+abstract class SmartDevice {
+    protected String name;
+
+    public SmartDevice(String name) { this.name = name; }
+    public String getName() { return name; }
+
+    public abstract String getStatus();
+    public abstract void performBehavior(); // Modify settings or trigger main feature
+    public abstract void execute();         // The standardized hub command
+}
+
+// 1. SmartLight
+class SmartLight extends SmartDevice {
+    protected int brightness = 50;
+    protected String color = "Warm White";
+
+    public SmartLight(String name) { super(name); }
+
+    @Override
+    public String getStatus() {
+        return "Brightness: " + brightness + "%, Color: " + color;
+    }
+
+    @Override
+    public void performBehavior() {
+        String input = JOptionPane.showInputDialog("Enter dimming percentage (0-100):");
+        if (input != null) {
+            try {
+                int b = Integer.parseInt(input);
+                this.brightness = Math.max(0, Math.min(100, b));
+                JOptionPane.showMessageDialog(null, name + " brightness set to " + brightness + "%.");
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Please enter a valid number.");
+            }
+        }
+    }
+
+    @Override
+    public void execute() {
+        this.brightness = 100;
+        JOptionPane.showMessageDialog(null, name + ": [EXECUTE] Brightness set to FULL.");
+    }
+}
+
+// 2. Thermostat
+class Thermostat extends SmartDevice {
+    private int currentTemp = 22;
+    private int targetTemp = 24;
+
+    public Thermostat(String name) { super(name); }
+
+    @Override
+    public String getStatus() {
+        return "Current: " + currentTemp + "°C, Target: " + targetTemp + "°C";
+    }
+
+    @Override
+    public void performBehavior() {
+        String input = JOptionPane.showInputDialog("Set target temperature (16-30°C):");
+        if (input != null) {
+            try {
+                int t = Integer.parseInt(input);
+                if (t >= 16 && t <= 30) {
+                    this.targetTemp = t;
+                    JOptionPane.showMessageDialog(null, "Target set to " + targetTemp + "°C.");
+                } else {
+                    JOptionPane.showMessageDialog(null, "Safety limit: Temp must be between 16-30°C.");
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Invalid input.");
+            }
+        }
+    }
+
+    @Override
+    public void execute() {
+        this.currentTemp = targetTemp;
+        JOptionPane.showMessageDialog(null, name + ": [EXECUTE] Activating HVAC to reach " + targetTemp + "°C.");
+    }
+}
+
+// 3. SecurityCamera
+class SecurityCamera extends SmartDevice {
+    private boolean isPowered = true;
+    private boolean isRecording = false;
+
+    public SecurityCamera(String name) { super(name); }
+
+    @Override
+    public String getStatus() {
+        return "Power: " + (isPowered ? "ON" : "OFF") + " | Recording: " + (isRecording ? "YES" : "NO");
+    }
+
+    @Override
+    public void performBehavior() {
+        if (!isPowered) {
+            JOptionPane.showMessageDialog(null, "Cannot toggle recording. Camera is OFF.");
+            return;
+        }
+        isRecording = !isRecording;
+        JOptionPane.showMessageDialog(null, "Recording " + (isRecording ? "STARTED" : "STOPPED"));
+    }
+
+    @Override
+    public void execute() {
+        if (isPowered) {
+            isRecording = true;
+            JOptionPane.showMessageDialog(null, name + ": [EXECUTE] Emergency recording started.");
+        } else {
+            JOptionPane.showMessageDialog(null, name + ": [EXECUTE] FAILED - Camera is powered off.");
+        }
+    }
+}
+
+// 4. SmartSpeaker
+class SmartSpeaker extends SmartDevice {
+    private int volume = 30;
+    private String currentTrack = "Classical FM";
+
+    public SmartSpeaker(String name) { super(name); }
+
+    @Override
+    public String getStatus() {
+        return "Volume: " + volume + "/100 | Playing: " + currentTrack;
+    }
+
+    @Override
+    public void performBehavior() {
+        String[] options = {"Play", "Pause", "Skip"};
+        int choice = JOptionPane.showOptionDialog(null, "Control Speaker:", name,
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        
+        if (choice == 2) {
+            currentTrack = "New Hit Track #" + (int)(Math.random() * 100);
+            JOptionPane.showMessageDialog(null, "Skipped! Now playing: " + currentTrack);
+        } else if (choice != -1) {
+            JOptionPane.showMessageDialog(null, options[choice] + " command sent.");
+        }
+    }
+
+    @Override
+    public void execute() {
+        JOptionPane.showMessageDialog(null, name + ": [EXECUTE] Resuming playback at default volume.");
+    }
+}
+
+// 5. SmartLock
+class SmartLock extends SmartDevice {
+    private boolean isLocked = true;
+    private final String PIN = "0000";
+
+    public SmartLock(String name) { super(name); }
+
+    @Override
+    public String getStatus() {
+        return "Status: " + (isLocked ? "LOCKED" : "UNLOCKED");
+    }
+
+    @Override
+    public void performBehavior() {
+        if (!isLocked) {
+            isLocked = true;
+            JOptionPane.showMessageDialog(null, "Door locked.");
+        } else {
+            String attempt = JOptionPane.showInputDialog("Enter 4-digit PIN to unlock:");
+            if (PIN.equals(attempt)) {
+                isLocked = false;
+                JOptionPane.showMessageDialog(null, "PIN Correct. Door Unlocked.");
+            } else {
+                System.out.println("[SECURITY LOG] Failed unlock attempt on " + name);
+                JOptionPane.showMessageDialog(null, "WRONG PIN. Attempt logged.", "Security Alert", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    @Override
+    public void execute() {
+        isLocked = true;
+        JOptionPane.showMessageDialog(null, name + ": [EXECUTE] Lock engaged.");
+    }
+}
+
+// 6. SecurityFloodlight (Inherits from SmartLight)
+class SecurityFloodlight extends SmartLight {
+    private String sensitivity = "MEDIUM";
+
+    public SecurityFloodlight(String name) { super(name); }
+
+    @Override
+    public String getStatus() {
+        return super.getStatus() + " | Motion Sensitivity: " + sensitivity;
+    }
+
+    @Override
+    public void performBehavior() {
+        String[] levels = {"LOW", "MEDIUM", "HIGH"};
+        String res = (String) JOptionPane.showInputDialog(null, "Select Sensitivity:", 
+                name, JOptionPane.QUESTION_MESSAGE, null, levels, sensitivity);
+        if (res != null) sensitivity = res;
+    }
+
+    @Override
+    public void execute() {
+        this.brightness = 100;
+        JOptionPane.showMessageDialog(null, name + ": [EXECUTE] Brightness to FULL + Motion Detection ARMED.");
+    }
+}
+
+// --- CENTRAL HUB CLASS ---
+public class SmartHomeManager {
+    public static void main(String[] args) {
+        ArrayList<SmartDevice> hub = new ArrayList<>();
+        hub.add(new SmartLight("Ceiling Light"));
+        hub.add(new Thermostat("Nest Thermostat"));
+        hub.add(new SecurityCamera("Porch Cam"));
+        hub.add(new SmartSpeaker("Living Room Sonos"));
+        hub.add(new SmartLock("Front Door Lock"));
+        hub.add(new SecurityFloodlight("Driveway Floodlight"));
+
+        while (true) {
+            StringBuilder menuList = new StringBuilder("Select a device to manage:\n");
+            for (int i = 0; i < hub.size(); i++) {
+                menuList.append((i + 1)).append(". ").append(hub.get(i).getName()).append("\n");
+            }
+            menuList.append("\nType 'exit' to quit.");
+
+            String input = JOptionPane.showInputDialog(null, menuList.toString(), "Smart Home Hub", JOptionPane.PLAIN_MESSAGE);
+
+            if (input == null || input.equalsIgnoreCase("exit")) break;
+
+            try {
+                int index = Integer.parseInt(input) - 1;
+                if (index >= 0 && index < hub.size()) {
+                    manageDevice(hub.get(index));
+                } else {
+                    JOptionPane.showMessageDialog(null, "Invalid device number.");
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Please enter a number or 'exit'.");
+            }
+        }
+    }
+
+    private static void manageDevice(SmartDevice device) {
+        String options = "Device: " + device.getName() + "\n" +
+                         "1. View Current State\n" +
+                         "2. Modify Settings/Behavior\n" +
+                         "3. Call execute()\n" +
+                         "4. Back to Main Menu";
+
+        while (true) {
+            String choice = JOptionPane.showInputDialog(null, options, device.getName(), JOptionPane.QUESTION_MESSAGE);
+            if (choice == null || choice.equals("4")) break;
+
+            switch (choice) {
+                case "1":
+                    JOptionPane.showMessageDialog(null, device.getName() + "\n" + device.getStatus());
+                    break;
+                case "2":
+                    device.performBehavior();
+                    break;
+                case "3":
+                    device.execute();
+                    break;
+                default:
+                    JOptionPane.showMessageDialog(null, "Invalid choice.");
+            }
+        }
+    }
+}
+```
